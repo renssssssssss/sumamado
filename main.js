@@ -1,4 +1,3 @@
-//要素を追加する関数
 function addElement(element, attributes) {
     const newElement = document.createElement(element);
     for (const property in attributes) {
@@ -7,14 +6,10 @@ function addElement(element, attributes) {
     document.body.appendChild(newElement);
 }
 
-//pattern配列やjudge_kind_of_url関数は削除し、こっち一つにまとめた
-function url_to_youtubeid(urltext){
+function url_to_youtubeid(urltext) {
     if (!urltext) return null;
-    
-    //javascriptのwatch?v=, shorts/, live/, youtu.be/ などの形式から11桁のIDを抽出する正規表現
     const regExp = /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|shorts\/|live\/|embed\/|v\/))([a-zA-Z0-9_-]{11})/;
     const match = urltext.match(regExp);
-    
     if (match) {
         console.log("id:" + match[1]);
         return match[1];
@@ -24,55 +19,65 @@ function url_to_youtubeid(urltext){
     }
 }
 
-//要素追加フォーム
+// URLテキストから重複なしでIDを一括抽出
+function extract_all_ids(rawText) {
+    const lines = rawText.split(/[\n\r,\s]+/);
+    const seen = new Set();
+    const ids = [];
+    for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed) continue;
+        const id = url_to_youtubeid(trimmed);
+        if (id && !seen.has(id)) {
+            seen.add(id);
+            ids.push(id);
+        }
+    }
+    return ids;
+}
+
+// フォーム生成
 const form = document.createElement("form");
 form.innerHTML = `
-    <input type="text" id="url" placeholder="URL" value="" style="width: 300px;">
-    <input type="number" id="width" placeholder="width(幅)" value="400">
+    <textarea id="url" placeholder="URLを改行・スペース・カンマで区切って複数入力できます" style="width:300px;height:80px;"></textarea>
+    <input type="number" id="width"  placeholder="width(幅)"   value="400">
     <input type="number" id="height" placeholder="height(高さ)" value="225">
     <button type="submit">追加</button>
-    <button type="reset" accesskey="r">クリア</button>`;
+    <button type="button" id="clear-btn" accesskey="r">クリア</button>`;
 
-//フォームにイベント登録
 form.addEventListener("submit", (event) => {
     event.preventDefault();
 
-    const url = document.getElementById("url").value;
-    const width = document.getElementById("width").value;
-    const height = document.getElementById("height").value;
-    
-    // IDを取得
-    const videoId = url_to_youtubeid(url);
+    const rawText = document.getElementById("url").value;
+    const width   = document.getElementById("width").value  || "400";
+    const height  = document.getElementById("height").value || "225";
 
-    if (videoId) {
-        //autoplayなどはiframeの属性ではなくURLパラメータに書くようになった
-        const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&playsinline=1`;
+    const ids = extract_all_ids(rawText);
 
-        const attributes = {
-            "src": embedUrl,
-            "width": width || "400",
-            "height": height || "225",
-            "frameborder": "0",
-            //自動再生に必要な権限設定
-            "allow": "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture",
-            "allowfullscreen": "true"
-        };
-        addElement("iframe", attributes);
-    } else {
-        alert("有効なYouTube URLを入力してください");
+    if (ids.length === 0) {
+        alert("有効なYouTube URLが見つかりませんでした");
+        return;
     }
+
+    for (const videoId of ids) {
+        const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&playsinline=1`;
+        addElement("iframe", {
+            src: embedUrl,
+            width,
+            height,
+            frameborder: "0",
+            allow: "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture",
+            allowfullscreen: "true"
+        });
+    }
+
+    // 追加できた本数をコンソールに表示
+    console.log(`${ids.length}本追加しました`);
 });
 
-//URL削除
-form.querySelector('button:last-of-type').addEventListener("click", (event) => {
-    const inputs = form.querySelectorAll('input[type="text"]');
-    inputs.forEach(input => {
-        input.value = "";
-    });
-});
-form.addEventListener("reset",(event) => {
-  
+// クリアボタン（textareaだけリセット）
+form.querySelector("#clear-btn").addEventListener("click", () => {
+    document.getElementById("url").value = "";
 });
 
-//フォームを追加
 document.body.appendChild(form);
