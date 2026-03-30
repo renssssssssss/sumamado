@@ -38,7 +38,7 @@ function get_youtubeid(rawText) {
 
 const form = document.createElement("form");
 form.innerHTML = `
-    <textarea id="url" placeholder="URLを改行・スペース・カンマで区切って複数入力できます" style="width:300px;height:80px;"></textarea>
+    <textarea id="url" placeholder="複数のURLを改行・スペース・カンマで区切って入力することで一括で追加できます" style="width:300px;height:80px;"></textarea>
     <input type="number" id="width"  placeholder="width(幅)"   value="400">
     <input type="number" id="height" placeholder="height(高さ)" value="225">
     <button type="submit">追加</button>
