@@ -1,42 +1,41 @@
 function addElement(element, attributes) {
-    const newElement = document.createElement(element);
-    for (const property in attributes) {
-        newElement.setAttribute(property, attributes[property]);
-    }
-    document.body.appendChild(newElement);
+  const newElement = document.createElement(element);
+  for (const property in attributes) {
+    newElement.setAttribute(property, attributes[property]);
+  }
+  document.body.appendChild(newElement);
 }
 
 function url_to_youtubeid(urltext) {
-    if (!urltext) return null;
-    const regExp = /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|shorts\/|live\/|embed\/|v\/))([a-zA-Z0-9_-]{11})/;
-    const match = urltext.match(regExp);
-    if (match) {
-        console.log("id:" + match[1]);
-        return match[1];
-    } else {
-        console.log("IDが見つかりませんでした");
-        return null;
-    }
+  if (!urltext) return null;
+  const regExp =
+    /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|shorts\/|live\/|embed\/|v\/))([a-zA-Z0-9_-]{11})/;
+  const match = urltext.match(regExp);
+  if (match) {
+    console.log("id:" + match[1]);
+    return match[1];
+  } else {
+    console.log("IDが見つかりませんでした");
+    return null;
+  }
 }
 
-// URLテキストから重複なしでIDを一括抽出
-function extract_all_ids(rawText) {
-    const lines = rawText.split(/[\n\r,\s]+/);
-    const seen = new Set();
-    const ids = [];
-    for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed) continue;
-        const id = url_to_youtubeid(trimmed);
-        if (id && !seen.has(id)) {
-            seen.add(id);
-            ids.push(id);
-        }
+function get_youtubeid(rawText) {
+  const lines = rawText.split(/[\n\r,\s]+/);
+  const seen = new Set();
+  const ids = [];
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    const id = url_to_youtubeid(trimmed);
+    if (id && !seen.has(id)) {
+      seen.add(id);
+      ids.push(id);
     }
-    return ids;
+  }
+  return ids;
 }
 
-// フォーム生成
 const form = document.createElement("form");
 form.innerHTML = `
     <textarea id="url" placeholder="URLを改行・スペース・カンマで区切って複数入力できます" style="width:300px;height:80px;"></textarea>
@@ -46,38 +45,38 @@ form.innerHTML = `
     <button type="button" id="clear-btn" accesskey="r">クリア</button>`;
 
 form.addEventListener("submit", (event) => {
-    event.preventDefault();
+  event.preventDefault();
 
-    const rawText = document.getElementById("url").value;
-    const width   = document.getElementById("width").value  || "400";
-    const height  = document.getElementById("height").value || "225";
+  const rawText = document.getElementById("url").value;
+  const width = document.getElementById("width").value || "400";
+  const height = document.getElementById("height").value || "225";
 
-    const ids = extract_all_ids(rawText);
+  const ids = get_youtubeid(rawText);
 
-    if (ids.length === 0) {
-        alert("有効なYouTube URLが見つかりませんでした");
-        return;
-    }
+  if (ids.length === 0) {
+    alert("有効なURLが見つかりませんでした");
+    return;
+  }
 
-    for (const videoId of ids) {
-        const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&playsinline=1`;
-        addElement("iframe", {
-            src: embedUrl,
-            width,
-            height,
-            frameborder: "0",
-            allow: "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture",
-            allowfullscreen: "true"
-        });
-    }
+  for (const videoId of ids) {
+    const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&playsinline=1`;
+    addElement("iframe", {
+      src: embedUrl,
+      width,
+      height,
+      frameborder: "0",
+      allow:
+        "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture",
+      allowfullscreen: "true",
+    });
+  }
 
-    // 追加できた本数をコンソールに表示
-    console.log(`${ids.length}本追加しました`);
+  console.log(`${ids.length}本追加`);
 });
 
-// クリアボタン（textareaだけリセット）
+
 form.querySelector("#clear-btn").addEventListener("click", () => {
-    document.getElementById("url").value = "";
+  document.getElementById("url").value = "";
 });
 
 document.body.appendChild(form);
