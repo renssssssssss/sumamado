@@ -15,7 +15,7 @@ function url_to_youtubeid(urltext) {
     console.log("id:" + match[1]);
     return match[1];
   } else {
-    console.log("IDが見つかりませんでした");
+    console.log("IDが見つかりません");
     return null;
   }
 }
